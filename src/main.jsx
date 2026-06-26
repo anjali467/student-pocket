@@ -33,14 +33,15 @@ const currency = new Intl.NumberFormat('en-IN', {
 });
 
 const demoUser = {
-  username: 'Aarav Student',
-  name: 'Aarav Student',
-  email: 'student@studentpocket.app',
-  password: 'student123',
-  parentEmail: 'parent@example.com',
+  username: 'username',
+  name: 'username',
+  email: 'email@gmail.com',
+  password: 'password',
+  parentEmail: 'parent@gmail.com',
 };
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const PASSWORD_MAX_LENGTH = 16;
 
 const defaultCategories = [
   {
@@ -322,6 +323,10 @@ function LoginScreen({ onLogin }) {
       setError('Password must be at least 6 characters.');
       return;
     }
+    if (form.password.length > PASSWORD_MAX_LENGTH) {
+      setError(`Password must not exceed ${PASSWORD_MAX_LENGTH} characters.`);
+      return;
+    }
     const normalizedEmail = form.email.trim().toLowerCase();
     setError('');
     try {
@@ -329,7 +334,7 @@ function LoginScreen({ onLogin }) {
         username: form.username.trim(),
         email: normalizedEmail,
         password: form.password,
-        parentEmail: form.parentEmail.trim() || 'parent@example.com',
+        parentEmail: form.parentEmail.trim() || demoUser.parentEmail,
         role: 'student',
       });
     } catch (error) {
@@ -354,7 +359,6 @@ function LoginScreen({ onLogin }) {
         </div>
         <div className="security-strip">
           <ShieldCheck size={20} />
-          <span>Your profile and records are stored in the local Student Pocket database.</span>
         </div>
       </section>
 
@@ -387,9 +391,12 @@ function LoginScreen({ onLogin }) {
               type="password"
               value={form.password}
               onChange={(event) => setForm({ ...form, password: event.target.value })}
-              placeholder="Minimum 6 characters"
+              placeholder={`6-${PASSWORD_MAX_LENGTH} characters`}
             />
           </label>
+          <p className={form.password.length > PASSWORD_MAX_LENGTH ? 'form-error' : 'helper-line'}>
+            Password length: {form.password.length}/{PASSWORD_MAX_LENGTH}
+          </p>
           <label>
             Parent email
             <input

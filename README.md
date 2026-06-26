@@ -48,10 +48,14 @@ The backend API runs at:
 http://127.0.0.1:4174/
 ```
 
-Demo login is pre-filled:
+The sign-in form is pre-filled with generic example values:
 
-- Email: `student@studentpocket.app`
-- Password: `student123`
+- Username: `username`
+- Email: `email@gmail.com`
+- Password: `password`
+- Parent email: `parent@gmail.com`
+
+Passwords must be 6-16 characters.
 
 New login emails start with empty transaction and lending records. The user must enter a username and set their monthly category budgets before entering the dashboard.
 
