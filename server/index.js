@@ -50,6 +50,7 @@ function createMailTransport() {
     host: process.env.SMTP_HOST,
     port: smtpPort(),
     secure: smtpSecure(),
+    family: 4,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
@@ -166,8 +167,8 @@ app.post('/api/notify-parent', async (request, response) => {
 
     response.json({ sent: true, message: `Email sent to ${parentEmail}.` });
   } catch (error) {
-    const message = error.code === 'ETIMEDOUT'
-      ? 'SMTP connection timeout. On Render, use SMTP_PORT=587 and SMTP_SECURE=false for Gmail, then redeploy.'
+    const message = error.code === 'ETIMEDOUT' || error.code === 'ENETUNREACH'
+      ? 'SMTP network connection failed. The app now forces IPv4 for Gmail; redeploy the latest commit and try again.'
       : error.message;
     response.status(500).json({ sent: false, message });
   }
