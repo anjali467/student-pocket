@@ -168,7 +168,7 @@ app.post('/api/notify-parent', async (request, response) => {
     response.json({ sent: true, message: `Email sent to ${parentEmail}.` });
   } catch (error) {
     const message = error.code === 'ETIMEDOUT' || error.code === 'ENETUNREACH'
-      ? 'SMTP network connection failed. The app now forces IPv4 for Gmail; redeploy the latest commit and try again.'
+      ? 'SMTP network connection failed. Check SMTP_HOST, SMTP_PORT, SMTP_SECURE, and redeploy the latest settings.'
       : error.message;
     response.status(500).json({ sent: false, message });
   }

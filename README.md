@@ -80,22 +80,24 @@ For hosted deployment on a free tier, use MongoDB Atlas by setting `MONGODB_URI`
 
 ## Parent email alerts
 
-The app can send a real email when a student crosses a budget, but SMTP must be configured first.
+The app can send a real email when a student crosses a budget, but SMTP must be configured first. SendGrid is recommended for Render deployment.
 
 1. Create a `.env` file in the project root.
 2. Copy the values from `.env.example`.
-3. Replace `SMTP_USER`, `SMTP_PASS`, and `MAIL_FROM` with your email settings.
+3. Replace `SMTP_PASS` and `MAIL_FROM` with your SendGrid settings.
 
-For Gmail, use an App Password, not your normal Gmail password:
+For SendGrid, create an API key and verify your sender email:
 
 ```text
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-gmail-app-password
-MAIL_FROM=Student Pocket <your-email@gmail.com>
+SMTP_HOST=smtp.sendgrid.net
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=apikey
+SMTP_PASS=your-sendgrid-api-key
+MAIL_FROM=Student Pocket <your-verified-sender-email>
 ```
+
+`SMTP_USER` must be exactly `apikey`. `SMTP_PASS` is the SendGrid API key, not your email password.
 
 Restart the app after changing `.env`:
 
@@ -138,12 +140,12 @@ Start command: npm start
 HOST=0.0.0.0
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/student-pocket
 MONGODB_DB=student-pocket
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-gmail-app-password
-MAIL_FROM=Student Pocket <your-email@gmail.com>
+SMTP_HOST=smtp.sendgrid.net
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=apikey
+SMTP_PASS=your-sendgrid-api-key
+MAIL_FROM=Student Pocket <your-verified-sender-email>
 ```
 
 5. Use MongoDB Atlas free tier for permanent hosted data. Render free tier does not support persistent disks, so SQLite should be used locally only.
