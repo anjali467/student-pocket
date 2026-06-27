@@ -80,24 +80,24 @@ For hosted deployment on a free tier, use MongoDB Atlas by setting `MONGODB_URI`
 
 ## Parent email alerts
 
-The app can send a real email when a student crosses a budget, but SMTP must be configured first. SendGrid is recommended for Render deployment.
+The app can send a real email when a student crosses a budget, but SMTP must be configured first. Brevo is recommended for Render deployment.
 
 1. Create a `.env` file in the project root.
 2. Copy the values from `.env.example`.
-3. Replace `SMTP_PASS` and `MAIL_FROM` with your SendGrid settings.
+3. Replace `SMTP_USER`, `SMTP_PASS`, and `MAIL_FROM` with your Brevo settings.
 
-For SendGrid, create an API key and verify your sender email:
+For Brevo, create an SMTP key and verify your sender email:
 
 ```text
-SMTP_HOST=smtp.sendgrid.net
+SMTP_HOST=smtp-relay.brevo.com
 SMTP_PORT=587
 SMTP_SECURE=false
-SMTP_USER=apikey
-SMTP_PASS=your-sendgrid-api-key
+SMTP_USER=your-brevo-login-email
+SMTP_PASS=your-brevo-smtp-key
 MAIL_FROM=Student Pocket <your-verified-sender-email>
 ```
 
-`SMTP_USER` must be exactly `apikey`. `SMTP_PASS` is the SendGrid API key, not your email password.
+`SMTP_USER` is your Brevo login email. `SMTP_PASS` is the Brevo SMTP key, not your email password.
 
 Restart the app after changing `.env`:
 
@@ -140,11 +140,11 @@ Start command: npm start
 HOST=0.0.0.0
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/student-pocket
 MONGODB_DB=student-pocket
-SMTP_HOST=smtp.sendgrid.net
+SMTP_HOST=smtp-relay.brevo.com
 SMTP_PORT=587
 SMTP_SECURE=false
-SMTP_USER=apikey
-SMTP_PASS=your-sendgrid-api-key
+SMTP_USER=your-brevo-login-email
+SMTP_PASS=your-brevo-smtp-key
 MAIL_FROM=Student Pocket <your-verified-sender-email>
 ```
 
@@ -166,4 +166,4 @@ SQLite will be stored at:
 
 ## Future backend scope
 
-For a larger public production version, use a hosted database such as PostgreSQL and a transactional email provider such as SendGrid, Mailgun, Amazon SES, or Resend.
+For a larger public production version, use a hosted database such as PostgreSQL and a transactional email provider such as Brevo, SendGrid, Mailgun, Amazon SES, or Resend.

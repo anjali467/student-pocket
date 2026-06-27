@@ -17,13 +17,13 @@ services:
       - key: MONGODB_DB
         value: student-pocket
       - key: SMTP_HOST
-        value: smtp.sendgrid.net
+        value: smtp-relay.brevo.com
       - key: SMTP_PORT
         value: 587
       - key: SMTP_SECURE
         value: false
       - key: SMTP_USER
-        value: apikey
+        sync: false
       - key: SMTP_PASS
         sync: false
       - key: MAIL_FROM
