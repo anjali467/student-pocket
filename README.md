@@ -80,15 +80,16 @@ For hosted deployment on a free tier, use MongoDB Atlas by setting `MONGODB_URI`
 
 ## Parent email alerts
 
-The app can send a real email when a student crosses a budget, but SMTP must be configured first. Brevo is recommended for Render deployment.
+The app can send a real email when a student crosses a budget. Brevo is recommended for Render deployment, and the app uses the Brevo HTTPS API when `BREVO_API_KEY` is configured.
 
 1. Create a `.env` file in the project root.
 2. Copy the values from `.env.example`.
-3. Replace `SMTP_USER`, `SMTP_PASS`, and `MAIL_FROM` with your Brevo settings.
+3. Replace `BREVO_API_KEY` and `MAIL_FROM` with your Brevo settings.
 
-For Brevo, create an SMTP key and verify your sender email:
+For Brevo, create an API key and verify your sender email:
 
 ```text
+BREVO_API_KEY=your-brevo-api-key
 SMTP_HOST=smtp-relay.brevo.com
 SMTP_PORT=587
 SMTP_SECURE=false
@@ -97,7 +98,7 @@ SMTP_PASS=your-brevo-smtp-key
 MAIL_FROM=Student Pocket <your-verified-sender-email>
 ```
 
-`SMTP_USER` is your Brevo login email. `SMTP_PASS` is the Brevo SMTP key, not your email password.
+`BREVO_API_KEY` is used first because HTTPS email sending is more reliable on Render than SMTP. SMTP settings remain available as a fallback.
 
 Restart the app after changing `.env`:
 
@@ -140,6 +141,7 @@ Start command: npm start
 HOST=0.0.0.0
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/student-pocket
 MONGODB_DB=student-pocket
+BREVO_API_KEY=your-brevo-api-key
 SMTP_HOST=smtp-relay.brevo.com
 SMTP_PORT=587
 SMTP_SECURE=false

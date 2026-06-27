@@ -31,6 +31,14 @@ function emailTransportConfigured() {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
+function brevoApiConfigured() {
+  return Boolean(process.env.BREVO_API_KEY && process.env.MAIL_FROM);
+}
+
+function emailConfigured() {
+  return brevoApiConfigured() || emailTransportConfigured();
+}
+
 function smtpPort() {
   return Number(process.env.SMTP_PORT || 587);
 }
@@ -61,12 +69,78 @@ function createMailTransport() {
   });
 }
 
+function parseSender(value) {
+  const raw = String(value || '').trim();
+  const match = raw.match(/^(.*?)\s*<([^>]+)>$/);
+
+  if (!match) {
+    return { email: raw, name: 'Student Pocket' };
+  }
+
+  return {
+    name: match[1].trim() || 'Student Pocket',
+    email: match[2].trim(),
+  };
+}
+
+function budgetAlertMessage({ studentName, category, spent, budget, expenseTitle }) {
+  return [
+    `Hello,`,
+    ``,
+    `${studentName} crossed the ${category} monthly budget.`,
+    `Expense: ${expenseTitle}`,
+    `Spent: Rs ${spent}`,
+    `Budget: Rs ${budget}`,
+    ``,
+    `This alert was sent by Student Pocket.`,
+  ].join('\n');
+}
+
+async function sendBrevoEmail({ to, subject, text }) {
+  const sender = parseSender(process.env.MAIL_FROM);
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'api-key': process.env.BREVO_API_KEY,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender,
+      to: [{ email: to }],
+      subject,
+      textContent: text,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Brevo API failed with status ${response.status}: ${body.slice(0, 200)}`);
+  }
+}
+
+async function sendSmtpEmail({ to, subject, text }) {
+  const transport = createMailTransport();
+  if (!transport) return false;
+
+  await transport.sendMail({
+    from: process.env.MAIL_FROM || process.env.SMTP_USER,
+    to,
+    subject,
+    text,
+  });
+
+  return true;
+}
+
 app.get('/api/health', (_request, response) => {
   response.json({
     ok: true,
     service: 'student-pocket-api',
     database: databaseProvider(),
-    emailConfigured: emailTransportConfigured(),
+    emailConfigured: emailConfigured(),
+    emailProvider: brevoApiConfigured() ? 'brevo-api' : emailTransportConfigured() ? 'smtp' : null,
+    brevoApiConfigured: brevoApiConfigured(),
     smtpHost: process.env.SMTP_HOST || null,
     smtpPort: emailTransportConfigured() ? smtpPort() : null,
     smtpSecure: emailTransportConfigured() ? smtpSecure() : null,
@@ -139,31 +213,26 @@ app.post('/api/notify-parent', async (request, response) => {
     return;
   }
 
-  const transport = createMailTransport();
-  if (!transport) {
+  if (!emailConfigured()) {
     response.status(503).json({
       sent: false,
-      message: 'Email is not configured. Add SMTP_HOST, SMTP_USER, SMTP_PASS, and MAIL_FROM settings, then restart or redeploy.',
+      message: 'Email is not configured. Add BREVO_API_KEY and MAIL_FROM in Render, then redeploy.',
     });
     return;
   }
 
   try {
-    await transport.sendMail({
-      from: process.env.MAIL_FROM || process.env.SMTP_USER,
+    const message = {
       to: parentEmail,
       subject: `Student Pocket alert: ${category} budget crossed`,
-      text: [
-        `Hello,`,
-        ``,
-        `${studentName} crossed the ${category} monthly budget.`,
-        `Expense: ${expenseTitle}`,
-        `Spent: Rs ${spent}`,
-        `Budget: Rs ${budget}`,
-        ``,
-        `This alert was sent by Student Pocket.`,
-      ].join('\n'),
-    });
+      text: budgetAlertMessage({ studentName, category, spent, budget, expenseTitle }),
+    };
+
+    if (brevoApiConfigured()) {
+      await sendBrevoEmail(message);
+    } else {
+      await sendSmtpEmail(message);
+    }
 
     response.json({ sent: true, message: `Email sent to ${parentEmail}.` });
   } catch (error) {

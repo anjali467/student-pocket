@@ -16,6 +16,8 @@ services:
         sync: false
       - key: MONGODB_DB
         value: student-pocket
+      - key: BREVO_API_KEY
+        sync: false
       - key: SMTP_HOST
         value: smtp-relay.brevo.com
       - key: SMTP_PORT
