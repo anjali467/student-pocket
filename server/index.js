@@ -28,7 +28,19 @@ function hashPassword(password) {
 }
 
 function emailTransportConfigured() {
-  return Boolean(process.env.SMTP_HOST && process.env.SMTP_PORT && process.env.SMTP_USER && process.env.SMTP_PASS);
+  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+}
+
+function smtpPort() {
+  return Number(process.env.SMTP_PORT || 587);
+}
+
+function smtpSecure() {
+  if (process.env.SMTP_SECURE) {
+    return process.env.SMTP_SECURE === 'true';
+  }
+
+  return smtpPort() === 465;
 }
 
 function createMailTransport() {
@@ -36,12 +48,15 @@ function createMailTransport() {
 
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: process.env.SMTP_SECURE === 'true',
+    port: smtpPort(),
+    secure: smtpSecure(),
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
+    connectionTimeout: 20000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000,
   });
 }
 
@@ -51,6 +66,9 @@ app.get('/api/health', (_request, response) => {
     service: 'student-pocket-api',
     database: databaseProvider(),
     emailConfigured: emailTransportConfigured(),
+    smtpHost: process.env.SMTP_HOST || null,
+    smtpPort: emailTransportConfigured() ? smtpPort() : null,
+    smtpSecure: emailTransportConfigured() ? smtpSecure() : null,
   });
 });
 
@@ -124,7 +142,7 @@ app.post('/api/notify-parent', async (request, response) => {
   if (!transport) {
     response.status(503).json({
       sent: false,
-      message: 'Email is not configured. Add SMTP settings to .env and restart npm.cmd run dev.',
+      message: 'Email is not configured. Add SMTP_HOST, SMTP_USER, SMTP_PASS, and MAIL_FROM settings, then restart or redeploy.',
     });
     return;
   }
@@ -148,7 +166,10 @@ app.post('/api/notify-parent', async (request, response) => {
 
     response.json({ sent: true, message: `Email sent to ${parentEmail}.` });
   } catch (error) {
-    response.status(500).json({ sent: false, message: error.message });
+    const message = error.code === 'ETIMEDOUT'
+      ? 'SMTP connection timeout. On Render, use SMTP_PORT=587 and SMTP_SECURE=false for Gmail, then redeploy.'
+      : error.message;
+    response.status(500).json({ sent: false, message });
   }
 });
 
